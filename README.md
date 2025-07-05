@@ -17,7 +17,7 @@ STM32_BareMetel/
 ├── main.c # Main source code with LED and switch logic
 ├── Makefile # For compiling the code using arm-none-eabi-gcc
 ├── linker.ld # Linker script for STM32 memory layout
-└── startup.s # Startup code and vector table (if applicable)
+└── startup.s # Startup code and vector table 
 
 
 ## 🛠 Requirements
