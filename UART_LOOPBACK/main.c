@@ -15,7 +15,7 @@
 #define USART2_CR1    (*(volatile unsigned int*)0x4000440C)
 
 void delay() {
-    for (volatile int i = 0; i < 500000; i++);
+    for (volatile int i = 0; i < 1000000; i++);
 }
 
 void uart2_write(char ch) {
@@ -23,15 +23,20 @@ void uart2_write(char ch) {
     USART2_DR = ch;
 }
 
-int main() {
-    // Enable GPIOA and USART2 clocks
-    RCC_AHB1ENR |= (1 << 0);     // GPIOA
-    RCC_APB1ENR |= (1 << 17);    // USART2
+uint8_t uart2_receive()
+{
+    while (!(USART2_SR & (1 << 5))); // Wait until RXNE is set (data ready)
+    return (uint8_t)USART2_DR;
+}
 
-    // Set PA2 (TX) and PA3 (RX) to alternate function
-    GPIOA_MODER &= ~(0xF << 4);   // Clear MODER2 and MODER3
-    GPIOA_MODER |=  (0xA << 4);   // Set to AF mode
+ 
 
+void uart2_init()
+{
+RCC_AHB1ENR |= (1 << 0);     // GPIOA
+// Set PA2 (TX) and PA3 (RX) to alternate function
+GPIOA_MODER &= ~(0xF << 4);   // Clear MODER2 and MODER3
+GPIOA_MODER |=  (0xA << 4);   // Set to AF mode
     // Set AF7 for USART2 (PA2 and PA3)
     GPIOA_AFRL &= ~((0xF << 8) | (0xF << 12));
     GPIOA_AFRL |=  ((0x7 << 8) | (0x7 << 12));
@@ -45,18 +50,31 @@ int main() {
     // USART settings: 8-bit, no parity, enable TX and RX
     USART2_CR1 &= ~(1 << 12);     // 8-bit data
     USART2_CR1 &= ~(1 << 10);     // No parity
-    USART2_CR1 |= (1 << 3) | (1 << 2); // TE and RE
-    USART2_CR1 |= (1 << 13);      // UE: USART enable
-
-    // Send a message
-    char *msg = "UART Tx testing...\r\n";
-    while (*msg) {
-        uart2_write(*msg++);
-        delay();  
-    }
-
+    USART2_CR1 |= (1 << 3) | (1 << 2)|(1 << 13); // TE and RE and  UE: USART enable
    
 }
+int main(void)
+{
+    uart2_init();
+    
+        // Send welcome message
+        char *msg = "USART2 Loopback Ready (STM32F401RE)\r\n";
+        while (*msg)
+        
+            uart2_write(*msg++);
+    
+        // Echo received characters
+        // while (1)
+        // {
+        //     uint8_t ch = uart2_receive();
+        //     uart2_write(ch);  // Echo back
+            
+        // }
+        uart2_write('\n');
+    
+}    
+  
+
 
 
 // #include <stdint.h>
